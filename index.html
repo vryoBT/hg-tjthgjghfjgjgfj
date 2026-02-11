@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mini FPS Game</title>
+<style>
+body { margin:0; overflow:hidden; background:black; }
+#score {
+    position:fixed;
+    top:10px;
+    left:10px;
+    color:white;
+    font-size:20px;
+    font-family:Arial;
+}
+#crosshair {
+    position:fixed;
+    top:50%;
+    left:50%;
+    width:20px;
+    height:20px;
+    margin-left:-10px;
+    margin-top:-10px;
+    border:2px solid white;
+    border-radius:50%;
+}
+</style>
+</head>
+<body>
+
+<div id="score">Skor: 0</div>
+<div id="crosshair"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+let score = 0;
+
+camera.position.y = 1.6;
+
+let light = new THREE.PointLight(0xffffff,1);
+light.position.set(0,10,0);
+scene.add(light);
+
+let floorGeo = new THREE.PlaneGeometry(50,50);
+let floorMat = new THREE.MeshStandardMaterial({color:0x444444});
+let floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+let targets = [];
+
+function createTarget(){
+    let geo = new THREE.BoxGeometry(1,1,1);
+    let mat = new THREE.MeshStandardMaterial({color:0xff0000});
+    let cube = new THREE.Mesh(geo, mat);
+    cube.position.set(
+        (Math.random()-0.5)*20,
+        0.5,
+        -Math.random()*20
+    );
+    scene.add(cube);
+    targets.push(cube);
+}
+
+for(let i=0;i<5;i++) createTarget();
+
+let keys = {};
+document.addEventListener("keydown", e=>keys[e.key]=true);
+document.addEventListener("keyup", e=>keys[e.key]=false);
+
+document.body.addEventListener("click", ()=>{
+    document.body.requestPointerLock();
+    shoot();
+});
+
+document.addEventListener("mousemove", e=>{
+    if(document.pointerLockElement===document.body){
+        camera.rotation.y -= e.movementX * 0.002;
+        camera.rotation.x -= e.movementY * 0.002;
+    }
+});
+
+function shoot(){
+    let raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+    let intersects = raycaster.intersectObjects(targets);
+    if(intersects.length>0){
+        let hit = intersects[0].object;
+        scene.remove(hit);
+        targets = targets.filter(t=>t!==hit);
+        score++;
+        document.getElementById("score").innerText="Skor: "+score;
+        createTarget();
+    }
+}
+
+function animate(){
+    requestAnimationFrame(animate);
+
+    if(keys["w"]) camera.translateZ(-0.1);
+    if(keys["s"]) camera.translateZ(0.1);
+    if(keys["a"]) camera.translateX(-0.1);
+    if(keys["d"]) camera.translateX(0.1);
+
+    renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
