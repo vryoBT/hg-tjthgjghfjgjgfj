@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>3D Komik Karakter Oyunu</title>
+<style>
+body{margin:0;overflow:hidden;background:#87CEEB;font-family:Arial}
+#ui{position:fixed;top:10px;left:10px;color:white;font-weight:bold}
+</style>
+</head>
+<body>
+<div id="ui">⬅️➡️ Ok tuşları ile sağa sola hareket</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let scene=new THREE.Scene();
+let camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+let renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Işık
+let light=new THREE.DirectionalLight(0xffffff,1);
+light.position.set(5,10,7);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0x404040));
+
+// Zemin
+let groundGeo=new THREE.PlaneGeometry(50,50);
+let groundMat=new THREE.MeshStandardMaterial({color:0x228B22});
+let ground=new THREE.Mesh(groundGeo,groundMat);
+ground.rotation.x=-Math.PI/2;
+scene.add(ground);
+
+// Komik 3D karakter
+let group=new THREE.Group();
+
+// Gövde
+let body=new THREE.Mesh(
+ new THREE.BoxGeometry(1.5,2,1),
+ new THREE.MeshStandardMaterial({color:0x000000})
+);
+body.position.y=2;
+group.add(body);
+
+// Kafa
+let head=new THREE.Mesh(
+ new THREE.SphereGeometry(0.8,32,32),
+ new THREE.MeshStandardMaterial({color:0xffcc99})
+);
+head.position.y=3.5;
+group.add(head);
+
+// Gözler
+let eyeGeo=new THREE.SphereGeometry(0.1,16,16);
+let eyeMat=new THREE.MeshStandardMaterial({color:0x000000});
+let eye1=new THREE.Mesh(eyeGeo,eyeMat);
+eye1.position.set(-0.2,3.6,0.7);
+let eye2=eye1.clone();
+eye2.position.x=0.2;
+group.add(eye1);
+group.add(eye2);
+
+scene.add(group);
+
+camera.position.set(0,4,8);
+
+// Hareket
+let moveLeft=false,moveRight=false;
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowLeft') moveLeft=true;
+ if(e.key==='ArrowRight') moveRight=true;
+});
+document.addEventListener('keyup',e=>{
+ if(e.key==='ArrowLeft') moveLeft=false;
+ if(e.key==='ArrowRight') moveRight=false;
+});
+
+function animate(){
+ requestAnimationFrame(animate);
+ if(moveLeft) group.position.x-=0.1;
+ if(moveRight) group.position.x+=0.1;
+ renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+ camera.aspect=window.innerWidth/window.innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
+</body>
+</html>
+
